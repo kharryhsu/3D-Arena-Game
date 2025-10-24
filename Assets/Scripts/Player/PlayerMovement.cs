@@ -10,7 +10,10 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = -9.81f;
 
     [Header("Attack Settings")]
-    public float attackCooldown = 2f;
+    public float attackCooldown = 0.5f;
+    public Transform firePoint;
+    public GameObject bulletPrefab;
+    public float bulletSpeed = 12f;
     private bool canAttack = true;
 
     private CharacterController controller;
@@ -44,7 +47,8 @@ public class PlayerMovement : MonoBehaviour
 
     void MoveAndRotate()
     {
-        if (!canAttack) return; // Prevent movement during attack (optional)
+        // Optional: lock movement during attack animation
+        if (!canAttack) return;
 
         Vector3 move = new Vector3(moveInput.x, 0, moveInput.y);
         controller.Move(move * moveSpeed * Time.deltaTime);
@@ -78,7 +82,22 @@ public class PlayerMovement : MonoBehaviour
 
         canAttack = false;
         animator.SetTrigger("Attack");
+
+        // Fire bullet slightly after animation trigger (sync with animation)
+        Invoke(nameof(FireBullet), 0.15f);
         Invoke(nameof(ResetAttack), attackCooldown);
+    }
+
+    void FireBullet()
+    {
+        if (firePoint == null || bulletPrefab == null) return;
+
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = firePoint.forward * bulletSpeed;
+        }
     }
 
     void ResetAttack()

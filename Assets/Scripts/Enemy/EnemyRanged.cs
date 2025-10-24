@@ -1,132 +1,225 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
+using System.Collections;
 
 public class EnemyRanged : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
-    public Animator animator;
     public NavMeshAgent agent;
+    public Animator animator;
     public Transform firePoint;
     public GameObject projectilePrefab;
-    // public GameObject hitEffectPrefab;
 
-    [Header("Stats")]
-    public float maxHP = 100f;
-    private float currentHP;
+    [Header("UI")]
+    public GameObject healthBarPrefab;   // ← assign your prefab here
+    private Slider healthSlider;
+    private Transform healthBarTransform;
+
+    [Header("Settings")]
     public float detectionRange = 15f;
-    public float attackRange = 10f;
+    public float stopDistance = 2f;
+
+    [Header("Attack Settings")]
+    public float attackRange = 6f;
     public float attackCooldown = 2f;
-    private float nextAttackTime = 0f;
-    private float fireDelayTime = 0.5f;
-    private bool isDead = false;
+    public float projectileSpeed = 12f;
+    public float fireDelay = 0.5f;
+    private bool isAttacking = false;
+    private float lastAttackTime;
+
+    [Header("Speeds")]
+    public float patrolSpeed = 0.5f;
+    public float chaseSpeed = 1f;
 
     [Header("Patrol Settings")]
-    public float patrolRadius = 10f;
+    public float patrolRadius = 20f;
     public float patrolWaitTime = 2f;
-    private Vector3 patrolTarget;
-    private bool isPatrolling = false;
+    public float reachThreshold = 1.0f;
 
-    [Header("Rotation Fix")]
-    public float modelFacingOffset = 0f;
+    [Header("Health")]
+    public float maxHP = 100f;
+    private float currentHP;
+    private bool isDead = false;
+
+    private bool isChasing = false;
+    private bool isPatrolling = false;
+    private Coroutine patrolRoutine;
 
     void Start()
     {
-        if (!player) player = GameObject.FindGameObjectWithTag("Player")?.transform;
         if (!agent) agent = GetComponent<NavMeshAgent>();
         if (!animator) animator = GetComponent<Animator>();
+        if (!player) player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
         currentHP = maxHP;
 
-        StartCoroutine(PatrolRoutine());
+        agent.updateRotation = true;
+        agent.updateUpAxis = true;
+        agent.isStopped = false;
+
+        // Instantiate health bar
+        if (healthBarPrefab)
+        {
+            GameObject hb = Instantiate(healthBarPrefab, transform);
+            hb.transform.localPosition = new Vector3(0, 2.2f, 0); // adjust height
+            healthBarTransform = hb.transform;
+            healthSlider = hb.GetComponentInChildren<Slider>();
+            if (healthSlider) healthSlider.value = 1f;
+        }
+
+        StartPatrol();
     }
 
     void Update()
     {
-        if (isDead || !player) return;
+        if (isDead || !player || agent == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
 
+        // Face health bar to camera
+        if (healthBarTransform && Camera.main)
+        {
+            Vector3 camForward = Camera.main.transform.forward;
+            camForward.y = 0; // ignore camera tilt so bar stays upright
+            healthBarTransform.rotation = Quaternion.LookRotation(camForward);
+        }
+
+        // --- Detect player ---
         if (distance <= detectionRange)
         {
-            StopCoroutine(PatrolRoutine());
-            HandleCombat(distance);
-        }
-
-        else if (!isPatrolling)
-        {
-            StartCoroutine(PatrolRoutine());
-        }
-    }
-
-    void HandleCombat(float distance)
-    {
-        if (distance <= attackRange)
-        {
-            agent.isStopped = true;
-            transform.LookAt(new Vector3(player.position.x, transform.position.y, player.position.z));
-            transform.Rotate(0, modelFacingOffset, 0);
-
-            if (Time.time >= nextAttackTime)
+            if (!isChasing)
             {
-                nextAttackTime = Time.time + attackCooldown + fireDelayTime;
-                animator.SetTrigger("Attack");
-                StartCoroutine(FireAfterDelay(fireDelayTime)); // wait before shooting
+                StopPatrol();
+                isChasing = true;
+                agent.speed = chaseSpeed;
+            }
+
+            // --- Combat behavior ---
+            if (distance <= attackRange)
+            {
+                agent.isStopped = true;
+                TryAttack();
+            }
+            else
+            {
+                agent.isStopped = false;
+                agent.SetDestination(player.position);
             }
         }
         else
         {
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
-            animator.SetFloat("Speed", agent.velocity.magnitude);
+            if (isChasing)
+            {
+                isChasing = false;
+                StartPatrol();
+            }
+        }
+
+        // --- Animation movement ---
+        float speedPercent = agent.velocity.magnitude / Mathf.Max(agent.speed, 0.01f);
+        animator.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
+    }
+
+    // -------------------- ATTACK --------------------
+    void TryAttack()
+    {
+        if (isAttacking || isDead) return;
+        if (Time.time - lastAttackTime < attackCooldown) return;
+
+        StartCoroutine(AttackRoutine());
+    }
+
+    IEnumerator AttackRoutine()
+    {
+        isAttacking = true;
+        lastAttackTime = Time.time;
+
+        Vector3 dir = (player.position - transform.position);
+        dir.y = 0;
+        if (dir != Vector3.zero)
+            transform.rotation = Quaternion.LookRotation(dir);
+
+        animator.SetTrigger("Attack");
+
+        yield return new WaitForSeconds(fireDelay);
+
+        FireProjectile();
+
+        yield return new WaitForSeconds(attackCooldown - fireDelay + 2f);
+        isAttacking = false;
+    }
+
+    void FireProjectile()
+    {
+        if (!projectilePrefab || !firePoint || isDead) return;
+
+        GameObject proj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+        Rigidbody rb = proj.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            Vector3 direction = (player.position + Vector3.up * 1.0f - firePoint.position).normalized;
+            rb.velocity = direction * projectileSpeed;
         }
     }
 
-    IEnumerator FireAfterDelay(float delay)
+    // -------------------- PATROL --------------------
+    void StartPatrol()
     {
-        yield return new WaitForSeconds(delay);
-        ShootProjectile();
+        if (isPatrolling || agent == null) return;
+        patrolRoutine = StartCoroutine(PatrolRoutine());
     }
 
-    public void ShootProjectile()
+    void StopPatrol()
     {
-        if (!firePoint || !projectilePrefab || isDead) return;
-
-        GameObject proj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
-        Vector3 dir = (player.position - firePoint.position).normalized;
-        proj.GetComponent<Rigidbody>().velocity = dir * 12f;
+        if (patrolRoutine != null)
+        {
+            StopCoroutine(patrolRoutine);
+            patrolRoutine = null;
+        }
+        isPatrolling = false;
+        agent.isStopped = true;
     }
 
     IEnumerator PatrolRoutine()
     {
         isPatrolling = true;
+        agent.speed = patrolSpeed;
 
-        while (!isDead)
+        while (!isChasing && !isDead)
         {
-            Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
-            randomDirection += transform.position;
+            Vector3 randomDirection = Random.insideUnitSphere * patrolRadius + transform.position;
 
             if (NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
             {
-                patrolTarget = hit.position;
-                agent.SetDestination(patrolTarget);
-                animator.SetFloat("Speed", 1f);
-            }
+                Vector3 target = hit.position;
+                agent.isStopped = false;
+                agent.SetDestination(target);
 
-            // Wait until it reaches destination
-            while (agent.pathPending || agent.remainingDistance > agent.stoppingDistance)
+                while (!isChasing && !isDead)
+                {
+                    if (!agent.pathPending && agent.remainingDistance <= reachThreshold)
+                    {
+                        agent.isStopped = true;
+                        break;
+                    }
+                    yield return null;
+                }
+
+                animator.SetFloat("Speed", 0f);
+                yield return new WaitForSeconds(patrolWaitTime);
+            }
+            else
             {
                 yield return null;
             }
-
-            // Idle wait
-            animator.SetFloat("Speed", 0f);
-            yield return new WaitForSeconds(patrolWaitTime);
         }
 
         isPatrolling = false;
     }
 
+    // -------------------- DAMAGE SYSTEM --------------------
     public void TakeDamage(float amount)
     {
         if (isDead) return;
@@ -134,11 +227,14 @@ public class EnemyRanged : MonoBehaviour
         currentHP -= amount;
         animator.SetTrigger("Hurt");
 
-        // if (hitEffectPrefab)
-        //     Instantiate(hitEffectPrefab, transform.position + Vector3.up, Quaternion.identity);
+        // Update health bar
+        if (healthSlider)
+            healthSlider.value = Mathf.Clamp01(currentHP / maxHP);
 
         if (currentHP <= 0f)
+        {
             Die();
+        }
     }
 
     void Die()
@@ -147,11 +243,24 @@ public class EnemyRanged : MonoBehaviour
         isDead = true;
 
         animator.SetTrigger("Die");
-        agent.enabled = false;
+        agent.isStopped = true;
 
         Collider col = GetComponent<Collider>();
         if (col) col.enabled = false;
 
-        Destroy(gameObject, 3f);
+        if (healthBarTransform)
+            Destroy(healthBarTransform.gameObject);
+
+        Destroy(gameObject, 4.6f);
+    }
+
+
+    // -------------------- DEBUG --------------------
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }

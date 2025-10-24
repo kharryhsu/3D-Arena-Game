@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyProjectile : MonoBehaviour
+public class PlayerProjectile : MonoBehaviour
 {
     [Header("Projectile Settings")]
     public float damage = 10f;
@@ -13,8 +13,8 @@ public class EnemyProjectile : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        // Just destroy when it hits something that isn't another enemy
-        if (other.CompareTag("Enemy"))
+        // Ignore other projectiles or the player
+        if (other.CompareTag("Player"))
             return;
     }
 }

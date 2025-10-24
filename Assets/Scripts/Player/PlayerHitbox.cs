@@ -11,7 +11,6 @@ public class PlayerHitbox : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("HiT!!!");
         if (other.CompareTag("EnemyProjectile"))
         {
             EnemyProjectile proj = other.GetComponent<EnemyProjectile>();

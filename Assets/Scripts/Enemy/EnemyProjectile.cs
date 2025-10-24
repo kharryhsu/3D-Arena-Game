@@ -15,7 +15,7 @@ public class EnemyProjectile : MonoBehaviour
         // Just destroy when it hits something that isn't another enemy
         if (!other.CompareTag("Enemy"))
         {
-            Destroy(gameObject);
+            // Destroy(gameObject);
         }
     }
 }

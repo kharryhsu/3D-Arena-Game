@@ -5,6 +5,16 @@ public class PlayerProjectile : MonoBehaviour
     [Header("Projectile Settings")]
     public float damage = 10f;
     public float lifetime = 3f;
+    PlayerMovement playerMovement;
+
+    void Awake()
+    {
+        playerMovement = GetComponent<PlayerMovement>() ?? GetComponentInParent<PlayerMovement>();
+        if (playerMovement != null)
+        {
+            damage = playerMovement.baseDamage;
+        }
+    }
 
     void Start()
     {

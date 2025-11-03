@@ -7,6 +7,10 @@ TagManager:
   - EnemyProjectile
   - Enemy
   - PlayerProjectile
+  - EnemyMeleeHitbox
+  - ScoreText
+  - BoosterText
+  - EnemiesText
   layers:
   - Default
   - TransparentFX

@@ -16,6 +16,15 @@ public class PlayerMovement : MonoBehaviour
     public float bulletSpeed = 12f;
     private bool canAttack = true;
 
+    [Header("Damage Settings")]
+    public float baseDamage = 20f;
+    private float damageMultiplier = 1f;
+    private bool isBoosted = false;
+
+    [Header("Potion Buff Settings")]
+    public float damageBoostAmount = 1.5f; // 50% more damage
+    public float boostDuration = 10f;
+
     private CharacterController controller;
     private Animator animator;
     private PlayerControls controls;
@@ -94,14 +103,38 @@ public class PlayerMovement : MonoBehaviour
 
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
+
+        // Set projectile damage before firing
+        PlayerProjectile proj = bullet.GetComponent<PlayerProjectile>();
+        if (proj != null)
+            proj.damage = baseDamage * damageMultiplier;
+
         if (rb != null)
-        {
             rb.velocity = firePoint.forward * bulletSpeed;
-        }
     }
 
     void ResetAttack()
     {
         canAttack = true;
+    }
+
+    // ===== POTION BUFF LOGIC =====
+    public void ApplyDamageBoost()
+    {
+        if (isBoosted) return;
+        StartCoroutine(DamageBoostRoutine());
+    }
+
+    private System.Collections.IEnumerator DamageBoostRoutine()
+    {
+        isBoosted = true;
+        damageMultiplier = damageBoostAmount;
+        Debug.Log("Damage boost active!");
+
+        yield return new WaitForSeconds(boostDuration);
+
+        damageMultiplier = 1f;
+        isBoosted = false;
+        Debug.Log("Damage boost ended!");
     }
 }

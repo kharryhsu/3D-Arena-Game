@@ -91,6 +91,7 @@ public class PlayerMovement : MonoBehaviour
 
         canAttack = false;
         animator.SetTrigger("Attack");
+        SoundManager.Instance?.PlayShoot();
 
         // Fire bullet slightly after animation trigger (sync with animation)
         Invoke(nameof(FireBullet), 0.15f);

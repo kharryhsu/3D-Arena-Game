@@ -158,6 +158,8 @@ public class EnemyExploder : EnemyBase
         Debug.Log($"{name} exploding now!");
 
         yield return new WaitForSeconds(explosionDelay);
+        
+        SoundManager.Instance?.PlayExplosion();
 
         if (explosionEffect)
             Instantiate(explosionEffect, transform.position, Quaternion.identity);

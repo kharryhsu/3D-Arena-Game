@@ -30,6 +30,7 @@ public class Health : MonoBehaviour
 
     public void TakeDamage(float amount)
     {
+        SoundManager.Instance?.PlayPlayerHurt();
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 

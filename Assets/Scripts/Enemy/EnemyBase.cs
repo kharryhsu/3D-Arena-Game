@@ -60,6 +60,7 @@ public abstract class EnemyBase : MonoBehaviour
     {
         if (isDead) return;
 
+        SoundManager.Instance?.PlayEnemyHurt();
         currentHealth -= amount;
         if (animator) animator.SetTrigger("Hurt");
 

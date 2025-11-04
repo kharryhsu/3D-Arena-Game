@@ -33,6 +33,8 @@ public class HealingItem : MonoBehaviour
             Health playerHealth = other.GetComponent<Health>();
             if (playerHealth)
             {
+                SoundManager.Instance?.PlayHealthItemPickup();
+
                 playerHealth.Heal(healAmount);
 
                 if (pickupSound)

@@ -17,6 +17,7 @@ public class PlayerHitbox : MonoBehaviour
             EnemyProjectile proj = other.GetComponent<EnemyProjectile>();
             if (proj != null)
             {
+                Debug.Log($"Player hit by projectile for {proj.damage} dmg!");
                 health.TakeDamage(proj.damage);
 
                 // Spawn hit effect at projectile position
@@ -33,6 +34,7 @@ public class PlayerHitbox : MonoBehaviour
             EnemyMeleeHitbox melee = other.GetComponent<EnemyMeleeHitbox>();
             if (melee != null)
             {
+                SoundManager.Instance?.PlayPlayerHurt();
                 Debug.Log($"Player hit by melee for {melee.damage} dmg!");
                 health.TakeDamage(melee.damage);
 

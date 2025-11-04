@@ -114,6 +114,7 @@ public class EnemyRanged : EnemyBase
         if (!projectilePrefab || !firePoint || isDead) return;
 
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+        SoundManager.Instance?.PlayShoot();
         Rigidbody rb = proj.GetComponent<Rigidbody>();
         if (rb != null)
         {

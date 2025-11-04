@@ -23,20 +23,22 @@ public class DamagePotion : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // ✅ Get player component
+            // Get player component
             PlayerMovement player = other.GetComponent<PlayerMovement>();
             if (player != null)
             {
+                SoundManager.Instance?.PlayBoosterItemPickup();
+
                 // Apply the boost
                 player.damageBoostAmount = damageBoost;
                 player.boostDuration = duration;
                 player.ApplyDamageBoost();
 
-                // ✅ Show timer in UI
+                // Show timer in UI
                 if (GameManager.Instance)
                     GameManager.Instance.ShowBoosterTimer(duration);
 
-                // ✅ Spawn floating text feedback
+                // Spawn floating text feedback
                 if (floatingTextPrefab)
                 {
                     Vector3 spawnPos = player.transform.position + Vector3.up * 2.2f;
@@ -45,11 +47,11 @@ public class DamagePotion : MonoBehaviour
                 }
             }
 
-            // ✅ Play pickup sound if assigned
+            // Play pickup sound if assigned
             if (pickupSound)
                 AudioSource.PlayClipAtPoint(pickupSound, transform.position);
 
-            // ✅ Destroy the potion after pickup
+            // Destroy the potion after pickup
             Destroy(gameObject);
         }
     }

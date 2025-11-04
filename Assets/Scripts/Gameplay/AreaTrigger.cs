@@ -41,7 +41,7 @@ public class AreaTrigger : MonoBehaviour
         {
             StartCoroutine(ShowTemporaryText(
                 doorUnlockedText,
-                "<size=45><color=#FFD700><b>The door is unlocked! Please head up.</b></color></size>",
+                "<size=32><color=#FFD700><b>The door is unlocked! Please head up.</b></color></size>",
                 5f
             ));
         }
@@ -53,10 +53,11 @@ public class AreaTrigger : MonoBehaviour
 
         if (other.CompareTag("Player"))
         {
-            Debug.Log("🎉 Player entered area trigger → showing Level Cleared!");
+            Debug.Log("Player entered area trigger → showing Level Cleared!");
 
             if (levelClearText)
             {
+                SoundManager.Instance?.PlayLevelClear();
                 levelClearText.gameObject.SetActive(true);
                 levelClearText.text = "<size=60><color=#00FF00><b>LEVEL CLEARED!</b></color></size>";
             }

@@ -172,4 +172,12 @@ public class GameManager : MonoBehaviour
             Debug.Log("No more levels in Build Settings!");
         }
     }
+
+    public void ResetGame()
+    {
+        score = 0;
+        activeEnemies.Clear();
+        UpdateScoreUI();
+        UpdateEnemiesRemainingUI();
+    }
 }

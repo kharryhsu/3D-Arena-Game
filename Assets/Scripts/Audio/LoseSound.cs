@@ -8,12 +8,14 @@ public class LoseSound : MonoBehaviour
     void Awake()
     {
         SoundManager.Instance?.PlayLose();
+        if (PlayerStats.Instance != null)
+            PlayerStats.Instance.currentHealth = PlayerStats.Instance.maxHealth;
+
+
     }
-    
+
     void Update()
     {
-        Debug.Log($"Player health reset to max: {PlayerStats.Instance.maxHealth}");
-        PlayerStats.Instance.currentHealth = PlayerStats.Instance.maxHealth;
-        Debug.Log($"Player health cur: {PlayerStats.Instance.currentHealth}");   
+        GameManager.Instance?.ResetGame();
     }
 }

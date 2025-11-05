@@ -8705,8 +8705,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   healthBarUI: {fileID: 2106194033}
-  animator: {fileID: 0}
-  sceneFader: {fileID: 0}
+  animator: {fileID: 3318535347199421514}
+  sceneFader: {fileID: 58800036}
 --- !u!114 &8713869912291669559
 MonoBehaviour:
   m_ObjectHideFlags: 0

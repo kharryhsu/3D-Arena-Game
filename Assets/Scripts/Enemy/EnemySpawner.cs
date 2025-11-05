@@ -65,14 +65,14 @@ public class EnemySpawner : MonoBehaviour
             else
             {
                 // Optional debug to see how often it fails
-                // Debug.LogWarning($"❌ Failed to find NavMesh position (Attempt {attempts})");
+                // Debug.LogWarning($"Failed to find NavMesh position (Attempt {attempts})");
             }
         }
 
         if (spawned < spawnCount)
-            Debug.LogWarning($"⚠️ Only spawned {spawned}/{spawnCount} enemies after {attempts} attempts.");
+            Debug.LogWarning($"Only spawned {spawned}/{spawnCount} enemies after {attempts} attempts.");
         else
-            Debug.Log($"🎯 Successfully spawned {spawned} enemies after {attempts} attempts.");
+            Debug.Log($"Successfully spawned {spawned} enemies after {attempts} attempts.");
 
         hasSpawned = true;
     }

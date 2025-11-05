@@ -2812,7 +2812,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefabs:
   - {fileID: 8263328106058351195, guid: b6f2814c83fac224696309bff820dc0e, type: 3}
-  spawnCount: 5
+  spawnCount: 4
   spawnRadius: 40
   spawnOnStart: 1
   navSampleDistance: 5

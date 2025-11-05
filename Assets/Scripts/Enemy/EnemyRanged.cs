@@ -36,6 +36,14 @@ public class EnemyRanged : EnemyBase
     {
         base.Start();
         if (!player) player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (agent)
+        {
+            agent.updateRotation = true;
+            agent.updateUpAxis = true;
+            agent.isStopped = false;
+        }
+        
         StartPatrol();
     }
 
